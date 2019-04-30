@@ -52,13 +52,24 @@ def download_gpt2(model_name='117M'):
                     pbar.update(chunk_size)
 
 
+def is_colaboratory_tpu():
+    is_colaboratory_tpu = 'COLAB_TPU_ADDR' in os.environ
+    return is_colaboratory_tpu
+
+def collaboratory_tpu_address():
+    return 'grpc://' + os.environ['COLAB_TPU_ADDR']
+
 def start_tf_sess():
     """
     Returns a tf.Session w/ config
     """
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
-    return tf.Session(config=config)
+    if (is_colaboratory_tpu()):
+        tpu_address = collaboratory_tpu_address()
+        return tf.Session(tpu_address, config=config)
+    else:
+        return tf.Session(config=config)
 
 
 def finetune(sess,
@@ -123,6 +134,12 @@ def finetune(sess,
         batch_size=batch_size,
         temperature=1.0,
         top_k=40)
+
+    if (is_colaboratory_tpu()):
+        tpu_address = collaboratory_tpu_address()
+        tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(tpu_address)
+        tpu_strategy = tf.contrib.tpu.TPUDistributionStrategy(tpu_cluster_resolver)
+        tf_sample = tf.contrib.tpu.keras_to_tpu_model(tf_sample, strategy=tpu_strategy)
 
     train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
     if accumulate_gradients > 1:
