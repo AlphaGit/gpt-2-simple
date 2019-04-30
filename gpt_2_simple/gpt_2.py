@@ -135,12 +135,6 @@ def finetune(sess,
         temperature=1.0,
         top_k=40)
 
-    if (is_colaboratory_tpu()):
-        tpu_address = collaboratory_tpu_address()
-        tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(tpu_address)
-        tpu_strategy = tf.contrib.tpu.TPUDistributionStrategy(tpu_cluster_resolver)
-        tf_sample = tf.contrib.tpu.keras_to_tpu_model(tf_sample, strategy=tpu_strategy)
-
     train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
     if accumulate_gradients > 1:
         opt = AccumulatingOptimizer(
@@ -154,6 +148,9 @@ def finetune(sess,
         opt_apply = tf.train.AdamOptimizer(
             learning_rate=learning_rate).minimize(
                 loss, var_list=train_vars)
+                
+        if (is_colaboratory_tpu()):
+            opt_apply = tf.contrib.tpu.CrossShardOptimizer(opt_apply)
         summary_loss = tf.summary.scalar('loss', loss)
 
     summary_log = tf.summary.FileWriter(checkpoint_path)
