@@ -148,30 +148,26 @@ def finetune(sess,
         opt_apply = tf.train.AdamOptimizer(
             learning_rate=learning_rate).minimize(
                 loss, var_list=train_vars)
-                
+
         if (is_colaboratory_tpu()):
             opt_apply = tf.contrib.tpu.CrossShardOptimizer(opt_apply)
         summary_loss = tf.summary.scalar('loss', loss)
 
     summary_log = tf.summary.FileWriter(checkpoint_path)
 
+    sess.run(tf.global_variables_initializer())
+
+    if restore_from == 'latest' or restore_from not in ['latest', 'fresh']:
+        ckpt = tf.train.latest_checkpoint(checkpoint_path),
+
+    if restore_from == 'fresh' or ckpt is None:
+        ckpt = tf.train.latest_checkpoint(
+            os.path.join('models', model_name))
+
+    print('Loading checkpoint', ckpt)
     saver = tf.train.Saver(
         var_list=train_vars,
         max_to_keep=max_checkpoints)
-    sess.run(tf.global_variables_initializer())
-
-    if restore_from == 'latest':
-        ckpt = tf.train.latest_checkpoint(checkpoint_path)
-        if ckpt is None:
-            # Get fresh GPT weights if new run.
-            ckpt = tf.train.latest_checkpoint(
-                os.path.join('models', model_name))
-    elif restore_from == 'fresh':
-        ckpt = tf.train.latest_checkpoint(
-            os.path.join('models', model_name))
-    else:
-        ckpt = tf.train.latest_checkpoint(restore_from)
-    print('Loading checkpoint', ckpt)
     saver.restore(sess, ckpt)
 
     if model_load:
