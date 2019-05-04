@@ -97,7 +97,7 @@ def finetune(sess,
 
     if (is_colaboratory_tpu()):
         CHECKPOINT_DIR = 'gs://colab-tpu-test/gpt-2-simple'
-    else
+    else:
         CHECKPOINT_DIR = 'checkpoint'
 
     SAMPLE_DIR = 'samples'
