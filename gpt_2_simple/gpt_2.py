@@ -127,7 +127,7 @@ def finetune(sess,
             "Can't get samples longer than window size: %s" % hparams.n_ctx)
 
     context = tf.placeholder(tf.int32, [batch_size, None])
-    output = model.model(hparams=hparams, X=context)
+    output = model.model(hparams=hparams, X=context, reuse=tf.AUTO_REUSE)
     loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
             labels=context[:, 1:], logits=output['logits'][:, :-1]))
