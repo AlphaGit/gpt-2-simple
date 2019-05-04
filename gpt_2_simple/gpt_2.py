@@ -95,10 +95,15 @@ def finetune(sess,
     See that file for parameter definitions.
     """
 
-    CHECKPOINT_DIR = 'checkpoint'
+    if (is_colaboratory_tpu()):
+        CHECKPOINT_DIR = 'gs://colab-tpu-test/gpt-2-simple'
+    else
+        CHECKPOINT_DIR = 'checkpoint'
+
     SAMPLE_DIR = 'samples'
 
     checkpoint_path = os.path.join(CHECKPOINT_DIR, run_name)
+    tf.logging.info(f'checkpoint_path: {checkpoint_path}')
 
     def maketree(path):
         try:
@@ -167,7 +172,8 @@ def finetune(sess,
     print('Loading checkpoint', ckpt)
     saver = tf.train.Saver(
         var_list=train_vars,
-        max_to_keep=max_checkpoints)
+        max_to_keep=max_checkpoints,
+        save_relative_paths=True)
     saver.restore(sess, ckpt)
 
     if model_load:
