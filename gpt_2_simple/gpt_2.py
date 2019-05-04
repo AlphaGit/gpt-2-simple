@@ -117,6 +117,7 @@ def finetune(sess,
             shutil.copyfile(os.path.join('models', model_name, file),
                             os.path.join(checkpoint_path, file))
 
+    tf.logging.info(f'checkpoint_path (before encoder): {checkpoint_path}')
     enc = encoder.get_encoder(checkpoint_path)
     hparams = model.default_hparams()
     with open(os.path.join(checkpoint_path, 'hparams.json')) as f:
